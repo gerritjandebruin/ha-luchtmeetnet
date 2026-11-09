@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Luchtmeetnet-meetstation",
+        "description": "Kies een officieel luchtmeetstation. Uurwaarden verschijnen met ongeveer een uur vertraging.",
+        "data": {
+          "station": "Meetstation",
+          "history_years": "Jaren historie importeren"
+        },
+        "data_description": {
+          "history_years": "De gemeten uurwaarden worden op de achtergrond in de langetermijnstatistieken van de nieuwe sensoren gezet. 0 importeert niets; de meeste stations gaan hooguit terug tot 2015."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "De Luchtmeetnet-API is niet bereikbaar."
+    },
+    "abort": {
+      "already_configured": "Dit meetstation is al ingesteld.",
+      "cannot_connect": "De Luchtmeetnet-API is niet bereikbaar."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "correct_statistics": "Gemeten waarden in de uurstatistieken zetten"
+        },
+        "data_description": {
+          "correct_statistics": "Vervangt de statistieken van de laatste 48 uur door de gepubliceerde uurwaarden, zodat grafieken kloppen met het uur waarin gemeten is en late data gaten opvult."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lki": { "name": "Luchtkwaliteitsindex" },
+      "ps": { "name": "Ultrafijnstof" },
+      "nox": { "name": "Stikstofoxiden" },
+      "nh3": { "name": "Ammoniak" },
+      "h2s": { "name": "Waterstofsulfide" },
+      "c6h6": { "name": "Benzeen" },
+      "c7h8": { "name": "Tolueen" },
+      "c8h10": { "name": "Xyleen" },
+      "c10h8": { "name": "Naftaleen" }
+    }
+  },
+  "exceptions": {
+    "entry_not_loaded": { "message": "Die Luchtmeetnet-integratie is niet geladen." },
+    "import_running": { "message": "Er loopt al een import van historie voor dit meetstation." }
+  },
+  "services": {
+    "import_history": {
+      "name": "Historie importeren",
+      "description": "Importeert gemeten uurwaarden van een meetstation in de langetermijnstatistieken van de sensoren. Draait op de achtergrond en gaat na een herstart verder.",
+      "fields": {
+        "config_entry_id": { "name": "Meetstation", "description": "De Luchtmeetnet-integratie waarvoor je importeert." },
+        "start": { "name": "Begin", "description": "Eerste dag om te importeren." },
+        "end": { "name": "Einde", "description": "Laatste dag om te importeren. Standaard eergisteren." }
+      }
+    }
+  }
+}

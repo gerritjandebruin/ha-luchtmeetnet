@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Luchtmeetnet station",
+        "description": "Pick an official air quality station. Hourly values are published with roughly an hour of delay.",
+        "data": {
+          "station": "Station",
+          "history_years": "Years of history to import"
+        },
+        "data_description": {
+          "history_years": "Measured hourly values are written into the long-term statistics of the new sensors, in the background. 0 imports nothing; most stations go back to 2015 at most."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the Luchtmeetnet API."
+    },
+    "abort": {
+      "already_configured": "This station is already configured.",
+      "cannot_connect": "Could not reach the Luchtmeetnet API."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "correct_statistics": "Write measured values into the hourly statistics"
+        },
+        "data_description": {
+          "correct_statistics": "Replaces the statistics of the last 48 hours with the published hourly values, so graphs line up with the hour they were measured in and late data fills gaps."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lki": { "name": "Air quality index" },
+      "ps": { "name": "Ultrafine particles" },
+      "nox": { "name": "Nitrogen oxides" },
+      "nh3": { "name": "Ammonia" },
+      "h2s": { "name": "Hydrogen sulfide" },
+      "c6h6": { "name": "Benzene" },
+      "c7h8": { "name": "Toluene" },
+      "c8h10": { "name": "Xylene" },
+      "c10h8": { "name": "Naphthalene" }
+    }
+  },
+  "exceptions": {
+    "entry_not_loaded": { "message": "That Luchtmeetnet entry is not loaded." },
+    "import_running": { "message": "A history import for this station is already running." }
+  },
+  "services": {
+    "import_history": {
+      "name": "Import history",
+      "description": "Imports measured hourly values of a station into the long-term statistics of its sensors. Runs in the background and resumes after a restart.",
+      "fields": {
+        "config_entry_id": { "name": "Station", "description": "The Luchtmeetnet entry to import for." },
+        "start": { "name": "Start", "description": "First day to import." },
+        "end": { "name": "End", "description": "Last day to import. Defaults to two days ago." }
+      }
+    }
+  }
+}

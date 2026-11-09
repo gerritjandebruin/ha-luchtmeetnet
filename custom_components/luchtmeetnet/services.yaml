@@ -1,0 +1,16 @@
+import_history:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: luchtmeetnet
+    start:
+      required: true
+      example: "2015-01-01"
+      selector:
+        date:
+    end:
+      required: false
+      selector:
+        date:
