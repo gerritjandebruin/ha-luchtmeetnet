@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 import time
 from typing import Any
@@ -48,7 +48,7 @@ class Station:
 
 
 def _fmt(dt: datetime) -> str:
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _parse(row: dict[str, Any]) -> Measurement | None:
@@ -68,7 +68,9 @@ class LuchtmeetnetClient:
         self._lock = asyncio.Lock()
         self._last = 0.0
 
-    async def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def _get(
+        self, path: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         url = f"{API_BASE}/{path}"
         failures = 0  # server and network errors; rate limiting is retried longer
         for attempt in range(_MAX_RETRIES):
@@ -88,12 +90,18 @@ class LuchtmeetnetClient:
                     status = repr(err)
             if status != 429:
                 failures += 1
-                if isinstance(status, int) and status < 500 or failures >= _MAX_FAILURES:
+                if (
+                    isinstance(status, int) and status < 500
+                ) or failures >= _MAX_FAILURES:
                     raise LuchtmeetnetError(f"Request to {path} failed: {status}")
             delay = min(15 * (attempt + 1), 120)
-            _LOGGER.debug("Luchtmeetnet %s gave %s, retrying in %s s", path, status, delay)
+            _LOGGER.debug(
+                "Luchtmeetnet %s gave %s, retrying in %s s", path, status, delay
+            )
             await asyncio.sleep(delay)
-        raise LuchtmeetnetError(f"Request to {path} still rate limited after {_MAX_RETRIES} attempts")
+        raise LuchtmeetnetError(
+            f"Request to {path} still rate limited after {_MAX_RETRIES} attempts"
+        )
 
     async def _paged(self, path: str, params: dict[str, Any]) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
@@ -134,13 +142,19 @@ class LuchtmeetnetClient:
         stop = end + timedelta(hours=1)
         while cursor < stop:
             upper = min(cursor + MAX_REQUEST_WINDOW, stop)
-            params = {"station_number": number, "start": _fmt(cursor), "end": _fmt(upper)}
+            params = {
+                "station_number": number,
+                "start": _fmt(cursor),
+                "end": _fmt(upper),
+            }
             rows = await self._paged("measurements", params)
             if lki:
                 rows += await self._paged("lki", params)
-            for row in rows:
-                if (m := _parse(row)) is not None and start <= m.start < end:
-                    out.append(m)
+            out.extend(
+                m
+                for row in rows
+                if (m := _parse(row)) is not None and start <= m.start < end
+            )
             # end is inclusive in the API; move one second past it
             cursor = upper + timedelta(seconds=1)
         return out

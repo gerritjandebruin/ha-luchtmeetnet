@@ -8,7 +8,9 @@ from typing import Final
 DOMAIN: Final = "luchtmeetnet"
 
 API_BASE: Final = "https://api.luchtmeetnet.nl/open_api"
-ATTRIBUTION: Final = "Data provided by Luchtmeetnet (RIVM and regional environmental services)"
+ATTRIBUTION: Final = (
+    "Data provided by Luchtmeetnet (RIVM and regional environmental services)"
+)
 
 CONF_STATION: Final = "station"
 CONF_HISTORY_YEARS: Final = "history_years"

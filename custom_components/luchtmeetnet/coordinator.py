@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -60,7 +60,7 @@ class LuchtmeetnetCoordinator(DataUpdateCoordinator[dict[str, Measurement]]):
         self._history_task: asyncio.Task[None] | None = None
 
     async def _async_update_data(self) -> dict[str, Measurement]:
-        end = hour_floor(datetime.now(timezone.utc)) + timedelta(hours=1)
+        end = hour_floor(datetime.now(UTC)) + timedelta(hours=1)
         try:
             rows = await self.client.async_get_measurements(
                 self.station.number, end - RECENT_WINDOW, end
@@ -91,8 +91,11 @@ class LuchtmeetnetCoordinator(DataUpdateCoordinator[dict[str, Measurement]]):
     # --- history -----------------------------------------------------------
 
     @callback
-    def async_start_history(self, start: datetime | None = None, end: datetime | None = None) -> bool:
-        """Start (or resume) importing history in the background.
+    def async_start_history(
+        self, start: datetime | None = None, end: datetime | None = None
+    ) -> bool:
+        """
+        Start (or resume) importing history in the background.
 
         Without arguments a pending import from the store is resumed.
         Returns False when an import is already running.
@@ -106,11 +109,13 @@ class LuchtmeetnetCoordinator(DataUpdateCoordinator[dict[str, Measurement]]):
         )
         return True
 
-    async def _async_history(self, start: datetime | None, end: datetime | None) -> None:
+    async def _async_history(
+        self, start: datetime | None, end: datetime | None
+    ) -> None:
         if start is not None:
             state = {
                 "start": hour_floor(start).isoformat(),
-                "end": hour_floor(end or datetime.now(timezone.utc) - RECENT_WINDOW).isoformat(),
+                "end": hour_floor(end or datetime.now(UTC) - RECENT_WINDOW).isoformat(),
             }
             state["cursor"] = state["start"]
             await self._store.async_save(state)
@@ -123,13 +128,17 @@ class LuchtmeetnetCoordinator(DataUpdateCoordinator[dict[str, Measurement]]):
         stop = datetime.fromisoformat(state["end"])
         _LOGGER.info(
             "Importing Luchtmeetnet history for %s from %s to %s",
-            self.station.number, cursor, stop,
+            self.station.number,
+            cursor,
+            stop,
         )
         total = 0
         while cursor < stop:
             upper = min(cursor + MAX_REQUEST_WINDOW * IMPORT_BATCH_WEEKS, stop)
             try:
-                rows = await self.client.async_get_measurements(self.station.number, cursor, upper)
+                rows = await self.client.async_get_measurements(
+                    self.station.number, cursor, upper
+                )
             except LuchtmeetnetError as err:
                 _LOGGER.warning("History import paused at %s: %s", cursor, err)
                 return  # resumed on next start or service call
@@ -140,5 +149,7 @@ class LuchtmeetnetCoordinator(DataUpdateCoordinator[dict[str, Measurement]]):
         state["cursor"] = None
         await self._store.async_save(state)
         _LOGGER.info(
-            "Luchtmeetnet history for %s imported: %s hourly values", self.station.number, total
+            "Luchtmeetnet history for %s imported: %s hourly values",
+            self.station.number,
+            total,
         )
