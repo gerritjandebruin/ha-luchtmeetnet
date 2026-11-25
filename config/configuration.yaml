@@ -1,0 +1,20 @@
+# https://www.home-assistant.io/integrations/default_config/
+# default_config:
+
+# https://www.home-assistant.io/integrations/homeassistant/
+homeassistant:
+  name: HA Dev
+
+# Bare essentials for the UI and services you likely want during dev
+frontend:
+http:
+system_log:
+api:
+websocket_api:
+
+
+# https://www.home-assistant.io/integrations/logger/
+logger:
+  default: info
+  logs:
+    custom_components.luchtmeetnet: debug

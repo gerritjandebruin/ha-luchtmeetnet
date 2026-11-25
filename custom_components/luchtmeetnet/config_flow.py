@@ -44,7 +44,9 @@ class LuchtmeetnetConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._stations: dict[str, str] = {}
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         client = LuchtmeetnetClient(async_get_clientsession(self.hass))
 
@@ -74,16 +76,25 @@ class LuchtmeetnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         options = [
             SelectOptionDict(value=number, label=f"{location} ({number})")
-            for number, location in sorted(self._stations.items(), key=lambda kv: kv[1].lower())
+            for number, location in sorted(
+                self._stations.items(), key=lambda kv: kv[1].lower()
+            )
         ]
         schema = vol.Schema(
             {
                 vol.Required(CONF_STATION): SelectSelector(
-                    SelectSelectorConfig(options=options, mode=SelectSelectorMode.DROPDOWN)
+                    SelectSelectorConfig(
+                        options=options, mode=SelectSelectorMode.DROPDOWN
+                    )
                 ),
-                vol.Required(CONF_HISTORY_YEARS, default=DEFAULT_HISTORY_YEARS): NumberSelector(
+                vol.Required(
+                    CONF_HISTORY_YEARS, default=DEFAULT_HISTORY_YEARS
+                ): NumberSelector(
                     NumberSelectorConfig(
-                        min=0, max=MAX_HISTORY_YEARS, step=1, mode=NumberSelectorMode.BOX
+                        min=0,
+                        max=MAX_HISTORY_YEARS,
+                        step=1,
+                        mode=NumberSelectorMode.BOX,
                     )
                 ),
             }
@@ -92,21 +103,27 @@ class LuchtmeetnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: LuchtmeetnetConfigEntry) -> LuchtmeetnetOptionsFlow:
+    def async_get_options_flow(
+        config_entry: LuchtmeetnetConfigEntry,
+    ) -> LuchtmeetnetOptionsFlow:
         return LuchtmeetnetOptionsFlow()
 
 
 class LuchtmeetnetOptionsFlow(OptionsFlowWithReload):
     """Options for a station."""
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(data=user_input)
         schema = vol.Schema(
             {
                 vol.Required(
                     CONF_CORRECT_STATISTICS,
-                    default=self.config_entry.options.get(CONF_CORRECT_STATISTICS, True),
+                    default=self.config_entry.options.get(
+                        CONF_CORRECT_STATISTICS, True
+                    ),
                 ): BooleanSelector(),
             }
         )

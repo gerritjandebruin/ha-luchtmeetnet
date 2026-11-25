@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -34,14 +34,18 @@ def _unit_class(formula: str) -> str | None:
     return None
 
 
-def entity_ids_by_formula(hass: HomeAssistant, entry_id: str, station: str) -> dict[str, str]:
+def entity_ids_by_formula(
+    hass: HomeAssistant, entry_id: str, station: str
+) -> dict[str, str]:
     """Return {formula: entity_id} for the enabled sensors of an entry."""
     registry = er.async_get(hass)
     prefix = f"{station}_"
     return {
         ent.unique_id.removeprefix(prefix): ent.entity_id
         for ent in er.async_entries_for_config_entry(registry, entry_id)
-        if ent.domain == "sensor" and ent.disabled_by is None and ent.unique_id.startswith(prefix)
+        if ent.domain == "sensor"
+        and ent.disabled_by is None
+        and ent.unique_id.startswith(prefix)
     }
 
 
@@ -52,13 +56,14 @@ def import_measurements(
     *,
     before: datetime | None = None,
 ) -> int:
-    """Import measurements as hourly statistics; returns the number of rows queued.
+    """
+    Import measurements as hourly statistics; returns the number of rows queued.
 
     Only hours that started before ``before`` (default: the current hour) are
     written, so the recorder's own compilation of the running hour is untouched.
     """
     if before is None:
-        before = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+        before = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
     per_formula: dict[str, dict[datetime, float]] = defaultdict(dict)
     for m in measurements:
         if m.formula in entity_ids and m.start < before:
@@ -87,4 +92,4 @@ def import_measurements(
 
 def hour_floor(dt: datetime) -> datetime:
     """Floor a datetime to the whole hour in UTC."""
-    return dt.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    return dt.astimezone(UTC).replace(minute=0, second=0, microsecond=0)

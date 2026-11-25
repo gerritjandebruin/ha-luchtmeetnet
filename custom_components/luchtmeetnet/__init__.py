@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 import voluptuous as vol
 
@@ -26,7 +26,11 @@ from .const import (
     DOMAIN,
     SERVICE_IMPORT_HISTORY,
 )
-from .coordinator import STORAGE_VERSION, LuchtmeetnetConfigEntry, LuchtmeetnetCoordinator
+from .coordinator import (
+    STORAGE_VERSION,
+    LuchtmeetnetConfigEntry,
+    LuchtmeetnetCoordinator,
+)
 
 PLATFORMS = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -45,7 +49,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def import_history(call: ServiceCall) -> None:
         entry = hass.config_entries.async_get_entry(call.data[ATTR_CONFIG_ENTRY_ID])
-        if entry is None or entry.domain != DOMAIN or entry.state is not ConfigEntryState.LOADED:
+        if (
+            entry is None
+            or entry.domain != DOMAIN
+            or entry.state is not ConfigEntryState.LOADED
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="entry_not_loaded"
             )
@@ -65,10 +73,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _local_midnight(day: date) -> datetime:
-    return dt_util.start_of_local_day(day).astimezone(timezone.utc)
+    return dt_util.start_of_local_day(day).astimezone(UTC)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LuchtmeetnetConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: LuchtmeetnetConfigEntry
+) -> bool:
     """Set up a station from a config entry."""
     client = LuchtmeetnetClient(async_get_clientsession(hass))
     try:
@@ -87,18 +97,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuchtmeetnetConfigEntry)
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "history_started": True}
         )
-        start = datetime.now(timezone.utc) - timedelta(days=round(365.25 * years))
+        start = datetime.now(UTC) - timedelta(days=round(365.25 * years))
         coordinator.async_start_history(start)
     else:
         coordinator.async_start_history()  # resume an interrupted import, if any
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LuchtmeetnetConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: LuchtmeetnetConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: LuchtmeetnetConfigEntry) -> None:
+async def async_remove_entry(
+    hass: HomeAssistant, entry: LuchtmeetnetConfigEntry
+) -> None:
     """Clean up stored import progress."""
     await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}").async_remove()
